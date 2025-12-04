@@ -21,7 +21,11 @@ void RunShift(ShiftOptions opts)
     var beatmap = BeatmapDecoder.Decode(path);
 
     foreach (var hitObject in beatmap.HitObjects)
+    {
         hitObject.StartTime += opts.Offset;
+        if (hitObject.EndTime != 0)
+            hitObject.EndTime += opts.Offset;
+    }
 
     foreach (var timingPoint in beatmap.TimingPoints)
         timingPoint.Offset += opts.Offset;
