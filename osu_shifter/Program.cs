@@ -9,6 +9,13 @@ return Parser.Default.ParseArguments<ShiftOptions>(args)
         },
         _ => 1);
 
+int Shift(int time, ShiftOptions opts)
+{
+    if (time < opts.StartTime || time > opts.EndTime)
+        return time;
+    return time + opts.Offset;
+}
+
 void RunShift(ShiftOptions opts)
 {
     var path = opts.InputPath;
@@ -22,15 +29,15 @@ void RunShift(ShiftOptions opts)
 
     foreach (var hitObject in beatmap.HitObjects)
     {
-        hitObject.StartTime += opts.Offset;
+        hitObject.StartTime = Shift(hitObject.StartTime, opts);
         if (hitObject.EndTime != 0)
-            hitObject.EndTime += opts.Offset;
+            hitObject.EndTime = Shift(hitObject.EndTime, opts);
     }
 
     foreach (var timingPoint in beatmap.TimingPoints)
-        timingPoint.Offset += opts.Offset;
+        timingPoint.Offset = Shift(timingPoint.Offset, opts);
 
-    beatmap.GeneralSection.PreviewTime += opts.Offset;
+    beatmap.GeneralSection.PreviewTime = Shift(beatmap.GeneralSection.PreviewTime, opts);
 
     var outputPath = string.IsNullOrWhiteSpace(opts.Output)
         ? Path.ChangeExtension(path, ".shifted.osu")
@@ -52,4 +59,10 @@ internal class ShiftOptions
 
     [Value(2, MetaName = "output", HelpText = "Output file path.", Required = false)]
     public required string Output { get; set; }
+
+    [Option("startTime", Default = int.MinValue, HelpText = "Start time to apply shifting")]
+    public int StartTime { get; set; }
+
+    [Option("endTime", Default = int.MaxValue, HelpText = "End time to apply shifting")]
+    public int EndTime { get; set; }
 }
